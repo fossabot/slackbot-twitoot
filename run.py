@@ -97,9 +97,9 @@ if __name__ == '__main__':
         bot_id = sc.api_call("auth.test")["user_id"]  # botのuser IDを取得する
         while True:  # コマンド待ち
             cmd, channel, file_url = parse_slack_cmd(sc.rtm_read())
-            if cmd and channel and not file_url:
+            if cmd and channel and not file_url:  # 画像なしメンション
                 logging.info(str(handle_command(cmd, channel)))
-            elif cmd and channel and file_url:
+            elif cmd and channel and file_url:  # 画像付きメンション
                 logging.info(str(handle_command_with_file(cmd, channel, file_url)))
             time.sleep(RTM_READ_DELAY)
     else:
