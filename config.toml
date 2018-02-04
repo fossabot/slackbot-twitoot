@@ -1,5 +1,6 @@
-[common]
+[system]
 rtm_interval = 1  # sec
+path_tmp = './tmp/'
 
 [bot]
 res_default = '((☛(◜◔。◔◝)☚))ここ大丈夫ですか～～～？？？ '  # 未定義のコマンドに対する返答

@@ -5,7 +5,7 @@ import toml
 CONFIG = toml.load(open('config.toml', encoding='utf-8'))
 
 URL = CONFIG['test']['img_url']
-save_path = './tmp/' + URL.split('/')[-1]
+save_path = CONFIG['system']['path_tmp'] + URL.split('/')[-1]
 
 res = requests.get(URL, stream=True)
 with open(save_path, "wb") as fp:
