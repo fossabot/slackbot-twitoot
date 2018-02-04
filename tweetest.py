@@ -4,7 +4,7 @@ import toml
 SECRET = toml.load(open('secret.toml', encoding='utf-8'))
 CONFIG = toml.load(open('config.toml', encoding='utf-8'))
 
-for account in ['twitter-ebiiiiim']:  # 複数アカウント対応
+for account in ['twitter_1']:  # 複数アカウント対応
     CK = SECRET[account]['consumer_key']
     CS = SECRET[account]['consumer_secret']
     AT = SECRET[account]['access_token']
