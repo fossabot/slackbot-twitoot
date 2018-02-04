@@ -78,10 +78,10 @@ def handle_cmd_kill(cmd):
     return CONFIG['bot']['res_kill']
 
 
-def handle_command_with_file(cmd, channel, file_url):
-    logging.info('Handling img cmd: ' + file_url + ',' + cmd)
-    img_path = download_img(file_url)
-    logging.info('File saved: ' + file_url + '->' + img_path)
+def handle_command_with_img(cmd, channel, img_url):
+    logging.info('Handling img cmd: ' + img_url + ',' + cmd)
+    img_path = download_img(img_url)
+    logging.info('File saved: ' + img_url + '->' + img_path)
 
     response = CONFIG['bot']['res_img_default']
 
@@ -138,7 +138,7 @@ if __name__ == '__main__':
             if cmd and channel and not file_url:  # 画像なしメンション
                 logging.info('Handled: mention txt  -> ' + str(handle_command(cmd, channel)))
             elif cmd and channel and file_url:  # 画像付きメンション
-                logging.info('Handled: mention img txt  -> ' + str(handle_command_with_file(cmd, channel, file_url)))
+                logging.info('Handled: mention img txt  -> ' + str(handle_command_with_img(cmd, channel, file_url)))
             time.sleep(RTM_READ_DELAY)
     else:
         logging.warning('Connection failed.')
