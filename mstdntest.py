@@ -17,3 +17,8 @@ f.close()
 
 mastodon = Mastodon(client_id=client_info_path, access_token=access_token, api_base_url=server_url)
 mastodon.toot('test from python')
+
+# mediaをアップロードした結果をtootに添付すれば画像付きtootができる
+# result = mastodon.media_post('./tmp/EXAMPLE.png')
+# imgs = [result]
+# mastodon.status_post(status='toot with an img from python', media_ids=imgs)
