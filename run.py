@@ -25,16 +25,27 @@ sc = SlackClient(SECRET['slack']['api_token'])
 
 def handle_cmd_sns(cmd, img_path):
     logging.info('Handling cmd SNS: ' + cmd + ',' + img_path)
-    return tweet(cmd) + ',' + toot(cmd)
+    return tweet(cmd, img_path) + ',' + toot(cmd, img_path)
 
 
+# TODO: tweet()とtoot()がDRYしてないからリファクタリング tweet(server,img), tweet(server,text), toot(server,img), ...
 def tweet(cmd, img_path):
     logging.info('Tweeting: ' + cmd + ',' + img_path)
+    if not img_path:
+        pass  # 画像なしTweet
+    else:
+        pass  # 画像付きTweet
+
     return CONFIG['bot']['res_tweet']
 
 
 def toot(cmd, img_path):
     logging.info('Tooting: ' + cmd + ',' + img_path)
+    if not img_path:
+        pass  # 画像なしTweet
+    else:
+        pass  # 画像付きTweet
+
     return CONFIG['bot']['res_toot']
 
 
@@ -52,6 +63,7 @@ def download_img(url):
     with open(save_path, "wb") as fp:
         shutil.copyfileobj(res.raw, fp)
     return save_path
+
 
 def handle_cmd_kill(cmd):
     """
@@ -75,6 +87,7 @@ def handle_command_with_file(cmd, channel, file_url):
 
     return sc.api_call('chat.postMessage', channel=channel, text=response, as_user=True)
 
+
 def handle_command(cmd, channel):
     """
     botに対するメンションを処理するメソッド, file_url=Noneの場合のコマンドの識別および処理の実施を行う
@@ -89,7 +102,7 @@ def handle_command(cmd, channel):
     elif cmd.startswith('kill'):
         response = handle_cmd_kill(cmd)
     elif cmd.startswith(CONFIG['bot']['cmd_sns']):
-        response = handle_cmd_sns(cmd)
+        response = handle_cmd_sns(cmd, None)  # 画像無しSNS投稿
 
     return sc.api_call('chat.postMessage', channel=channel, text=response, as_user=True)
 
