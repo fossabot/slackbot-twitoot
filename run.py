@@ -13,7 +13,7 @@ SECRET = toml.load(open('secret.toml', encoding='utf-8'))
 bot_id = None
 
 # ログの設定(ログはコンソールに表示する)
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -23,17 +23,18 @@ logging.getLogger().addHandler(ch)
 sc = SlackClient(SECRET['slack']['api_token'])
 
 
-def handle_cmd_sns(cmd):
+def handle_cmd_sns(cmd, img_path):
+    logging.info('Handling cmd SNS: ' + cmd + ',' + img_path)
     return tweet(cmd) + ',' + toot(cmd)
 
 
-def tweet(cmd):
-    logging.info('Tweet:'+cmd)
+def tweet(cmd, img_path):
+    logging.info('Tweeting: ' + cmd + ',' + img_path)
     return CONFIG['bot']['res_tweet']
 
 
-def toot(cmd):
-    logging.info('Toot:' + cmd)
+def toot(cmd, img_path):
+    logging.info('Tooting: ' + cmd + ',' + img_path)
     return CONFIG['bot']['res_toot']
 
 
@@ -45,12 +46,12 @@ def download_img(url):
     if exe == 'jpeg':
         exe = 'jpg'
     filename = ''.join(url.split('/')[-1].split('.')[:-1]) + '.' + exe
-    print(filename)
+
     save_path = CONFIG['system']['path_tmp'] + filename
     res = requests.get(url, stream=True)
     with open(save_path, "wb") as fp:
         shutil.copyfileobj(res.raw, fp)
-
+    return save_path
 
 def handle_cmd_kill(cmd):
     """
@@ -66,10 +67,13 @@ def handle_cmd_kill(cmd):
 
 
 def handle_command_with_file(cmd, channel, file_url):
-    print('file upload detected:', file_url)
-    download_img(file_url)
-    print('file downloaded:', file_url)
+    logging.info('Handling img cmd: ' + file_url + ',' + cmd)
+    img_path = download_img(file_url)
+    logging.info('File saved: ' + file_url + '->' + img_path)
 
+    response = CONFIG['bot']['res_img_default']
+
+    return sc.api_call('chat.postMessage', channel=channel, text=response, as_user=True)
 
 def handle_command(cmd, channel):
     """
@@ -79,7 +83,7 @@ def handle_command(cmd, channel):
     :return: サーバの応答(Slackの対象チャンネルにコマンドの実行結果を投稿した結果)
     """
     response = CONFIG['bot']['res_default']
-    print(cmd)
+    logging.info('Handling cmd: ' + cmd)
     if cmd.startswith(('help', '-h', '--help', '使い方', 'a')):
         response = CONFIG['bot']['res_help']
     elif cmd.startswith('kill'):
@@ -102,10 +106,11 @@ def parse_slack_cmd(cmd):
         if ('text' in elem) and (at_bot in elem['text']):  # cmd[text]の中を見て、botに対するメンションの場合のみ
             if len(elem['text'].split('uploaded a file: <')) > 1:  # ファイルアップロード
                 if elem['text'].split('uploaded a file: <')[1].split('|')[0].split('.')[-1] in ['png','jpg','jpeg', 'bmp', 'gif']:  # Slackは拡張子をlowercaseで保存する
+                    logging.info("Parsing: mention img txt")
                     file_url = elem['text'].split('uploaded a file: <')[1].split('|')[0]
-                    print('file_url:', file_url)
                     return elem['text'].split(at_bot)[1].strip(), elem['channel'], file_url
             else:
+                logging.info("Parsing: mention txt")
                 return elem['text'].split(at_bot)[1].strip(), elem['channel'], None
     return None, None, None
 
@@ -118,9 +123,9 @@ if __name__ == '__main__':
         while True:  # コマンド待ち
             cmd, channel, file_url = parse_slack_cmd(sc.rtm_read())
             if cmd and channel and not file_url:  # 画像なしメンション
-                logging.info(str(handle_command(cmd, channel)))
+                logging.info('Handled: mention txt  -> ' + str(handle_command(cmd, channel)))
             elif cmd and channel and file_url:  # 画像付きメンション
-                logging.info(str(handle_command_with_file(cmd, channel, file_url)))
+                logging.info('Handled: mention img txt  -> ' + str(handle_command_with_file(cmd, channel, file_url)))
             time.sleep(RTM_READ_DELAY)
     else:
         logging.warning('Connection failed.')
