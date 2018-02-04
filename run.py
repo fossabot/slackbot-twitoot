@@ -1,3 +1,5 @@
+import shutil
+import requests
 import time
 from slackclient import SlackClient
 import logging
@@ -35,6 +37,21 @@ def toot(cmd):
     return CONFIG['bot']['res_toot']
 
 
+def download_img(url):
+    # TODO: デフォルトのブラウザでSlackにログインしている状態でのみ確認しています...
+
+    # jpeg -> jpg
+    exe = url.split('/')[-1].split('.')[-1]
+    if exe == 'jpeg':
+        exe = 'jpg'
+    filename = ''.join(url.split('/')[-1].split('.')[:-1]) + '.' + exe
+    print(filename)
+    save_path = CONFIG['system']['path_tmp'] + filename
+    res = requests.get(url, stream=True)
+    with open(save_path, "wb") as fp:
+        shutil.copyfileobj(res.raw, fp)
+
+
 def handle_cmd_kill(cmd):
     """
     killコマンドの処理を行うメソッド
@@ -49,7 +66,9 @@ def handle_cmd_kill(cmd):
 
 
 def handle_command_with_file(cmd, channel, file_url):
-    print('file upload detected!!!')
+    print('file upload detected:', file_url)
+    download_img(file_url)
+    print('file downloaded:', file_url)
 
 
 def handle_command(cmd, channel):
@@ -82,8 +101,9 @@ def parse_slack_cmd(cmd):
         logging.debug("Parsing: " + str(cmd))
         if ('text' in elem) and (at_bot in elem['text']):  # cmd[text]の中を見て、botに対するメンションの場合のみ
             if len(elem['text'].split('uploaded a file: <')) > 1:  # ファイルアップロード
-                if elem['text'].split('uploaded a file: <')[1].split('|')[0].split('.')[-1].lower() in ['png','jpg','jpeg', 'bmp', 'gif']:
+                if elem['text'].split('uploaded a file: <')[1].split('|')[0].split('.')[-1] in ['png','jpg','jpeg', 'bmp', 'gif']:  # Slackは拡張子をlowercaseで保存する
                     file_url = elem['text'].split('uploaded a file: <')[1].split('|')[0]
+                    print('file_url:', file_url)
                     return elem['text'].split(at_bot)[1].strip(), elem['channel'], file_url
             else:
                 return elem['text'].split(at_bot)[1].strip(), elem['channel'], None
@@ -91,7 +111,7 @@ def parse_slack_cmd(cmd):
 
 
 if __name__ == '__main__':
-    RTM_READ_DELAY = CONFIG['common']['rtm_interval']
+    RTM_READ_DELAY = CONFIG['system']['rtm_interval']
     if sc.rtm_connect():
         logging.info('Bot connected and running!')
         bot_id = sc.api_call("auth.test")["user_id"]  # botのuser IDを取得する
