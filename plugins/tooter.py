@@ -5,9 +5,10 @@ from mastodon import Mastodon
 SECRET = toml.load(open('secret.toml', encoding='utf-8'))
 CONFIG = toml.load(open('config.toml', encoding='utf-8'))
 
+
 def toot(toot_text,
-         toot_media_list
-         ,server_url=SECRET['mastodon']['server_1']['url'],
+         toot_media_list,
+         server_url=SECRET['mastodon']['server_1']['url'],
          client_key=SECRET['mastodon']['server_1']['app_1']['client_key'],
          client_secret=SECRET['mastodon']['server_1']['app_1']['client_secret'],
          access_token=SECRET['mastodon']['server_1']['app_1']['id_1']['access_token']) -> (bool, dict):
@@ -23,11 +24,12 @@ def toot(toot_text,
     """
 
     # TODO: check inputs, imgリストは要チェック, とりあえず実装した...
-    for media in toot_media_list:
-        check_path = CONFIG['system']['path_tmp']+media
-        is_valid =  os.path.isfile(check_path)
-        if not is_valid:
-            return False, 'invalid media path:'+check_path
+    if toot_media_list:
+        for media in toot_media_list:
+            check_path = CONFIG['system']['path_tmp']+media
+            is_valid = os.path.isfile(check_path)
+            if not is_valid:
+                return False, 'invalid media path:'+check_path
 
     # generate client_id.txt
     client_info_path = CONFIG['system']['path_tmp']+'client_id.txt'
@@ -51,5 +53,5 @@ def toot(toot_text,
 
 
 if __name__ == '__main__':
-    print(toot('test from python', None))
+    print(toot('toot from python', None))
 
