@@ -1,3 +1,4 @@
+import os.path
 import toml
 from mastodon import Mastodon
 
@@ -13,7 +14,7 @@ def toot(toot_text,
     """
     tootを行うメソッド
     :param str toot_text: tootする内容
-    :param list toot_media_list: tootに添付するメディアのURLsのリスト
+    :param list toot_media_list: tootに添付するメディアのパスのリスト
     :param str server_url: サーバURL e.g. https://mstdn.example.com
     :param str client_key: client_key
     :param str client_secret: client_secret
@@ -21,7 +22,12 @@ def toot(toot_text,
     :return: (bool, dict)で成否とresponse or errorを返す
     """
 
-    # TODO: check inputs, urlリストは要チェック
+    # TODO: check inputs, imgリストは要チェック, とりあえず実装した...
+    for media in toot_media_list:
+        check_path = CONFIG['system']['path_tmp']+media
+        is_valid =  os.path.isfile(check_path)
+        if not is_valid:
+            return False, 'invalid media path:'+check_path
 
     # generate client_id.txt
     client_info_path = CONFIG['system']['path_tmp']+'client_id.txt'
