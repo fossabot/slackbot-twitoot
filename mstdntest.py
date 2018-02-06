@@ -11,7 +11,7 @@ def toot(toot_text,
          client_secret=SECRET['mastodon']['server_1']['app_1']['client_secret'],
          access_token=SECRET['mastodon']['server_1']['app_1']['id_1']['access_token']) -> (bool, dict):
     """
-
+    tootを行うメソッド
     :param str toot_text: tootする内容
     :param list toot_media_list: tootに添付するメディアのURLsのリスト
     :param str server_url: サーバURL e.g. https://mstdn.example.com
@@ -20,8 +20,9 @@ def toot(toot_text,
     :param str access_token: access_token
     :return: (bool, dict)で成否とresponse or errorを返す
     """
-    # check inputs
-        # urlの末尾の/を削除
+
+    # TODO: check inputs, urlリストは要チェック
+
     # generate client_id.txt
     client_info_path = CONFIG['system']['path_tmp']+'client_id.txt'
     client_info = client_key + '\n' + client_secret
@@ -31,11 +32,12 @@ def toot(toot_text,
 
     try:
         mastodon = Mastodon(client_id=client_info_path, access_token=access_token, api_base_url=server_url)
-        result = True, mastodon.toot(toot_text)
-        # mediaをアップロードした結果をtootに添付すれば画像付きtootができる
-        # result = mastodon.media_post('./tmp/EXAMPLE.png')
-        # imgs = [result]
-        # mastodon.status_post(status='toot with an img from python', media_ids=imgs)
+        if toot_media_list is None:
+            result = True, mastodon.toot(toot_text)
+        else:
+            # mediaをアップロードした結果をtootに添付すれば画像付きtootができる
+            imgs = [mastodon.media_post(media) for media in toot_media_list]
+            result = True, mastodon.status_post(status=toot_text, media_ids=imgs)
     except Exception as e:
         result = False, e
     finally:
