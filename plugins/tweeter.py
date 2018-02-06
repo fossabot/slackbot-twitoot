@@ -4,13 +4,23 @@ import toml
 SECRET = toml.load(open('secret.toml', encoding='utf-8'))
 CONFIG = toml.load(open('config.toml', encoding='utf-8'))
 
-for account in ['id_'+ str(i+1) for i in range(1)]:  # 複数アカウント対応
-    CK = SECRET['twitter']['app_1']['consumer_key']
-    CS = SECRET['twitter']['app_1']['consumer_secret']
-    AT = SECRET['twitter']['app_1'][account]['access_token']
-    AS = SECRET['twitter']['app_1'][account]['access_token_secret']
 
-    twitter = OAuth1Session(CK, CS, AT, AS)
+def tweet(tweet_text,
+          tweet_media_list,
+          consumer_key=SECRET['twitter']['app_1']['consumer_key'],
+          consumer_secret=SECRET['twitter']['app_1']['consumer_secret'],
+          access_token=SECRET['twitter']['app_1']['id_1']['access_token'],
+          access_token_secret=SECRET['twitter']['app_1']['id_1']['access_token_secret']) -> (bool, dict):
 
-    params = {"status": "test"}
-    twitter.post(CONFIG['twitter']['url_text'], params=params)
+    twitter = OAuth1Session(consumer_key, consumer_secret, access_token, access_token_secret)
+
+    if tweet_media_list:
+        # media付きtweet
+        pass
+    else:
+        try:
+            params = {"status": tweet_text}
+            return True, twitter.post(CONFIG['twitter']['url_text'], params=params)
+        except Exception as e:
+            return False, e
+
