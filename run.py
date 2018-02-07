@@ -4,6 +4,8 @@ import time
 from slackclient import SlackClient
 import logging
 import toml
+import plugins.tooter as tooter
+import plugins.tweeter as tweeter
 
 # 設定ファイル
 CONFIG = toml.load(open('config.toml', encoding='utf-8'))
@@ -24,35 +26,39 @@ sc = SlackClient(SECRET['slack']['api_token'])
 
 
 def handle_cmd_sns(cmd, img_path):
-    logging.info('Handling cmd SNS: ' + cmd + ',' + img_path)
-    return tweet(cmd, img_path) + ',' + toot(cmd, img_path)
+
+    # TODO: 構造が汚い！
+    mastodon1 = {"server": SECRET['mastodon']['server_1']['url'],
+                 "client_key": SECRET['mastodon']['server_1']['app_1']['client_key'],
+                 "client_secret": SECRET['mastodon']['server_1']['app_1']['client_secret'],
+                 "access_token": SECRET['mastodon']['server_1']['app_1']['id_1']['access_token']}
+
+    twitter1 = {"consumer_key": SECRET['twitter']['app_1']['consumer_key'],
+                "consumer_secret": SECRET['twitter']['app_1']['consumer_secret'],
+                "access_token": SECRET['twitter']['app_1']['id_1']['access_token'],
+                "access_token_secret": SECRET['twitter']['app_1']['id_1']['access_token_secret']}
+
+    logging.info('Handling cmd SNS: ' + cmd + ',' + str(img_path))
+    return tweet(twitter1, cmd, img_path) + '\n' + toot(mastodon1, cmd, img_path)
+
+def tweet(twitter_id, text, img_path):
+    # イメージ1個のみを想定
+    logging.info('Tweeting: ' + cmd + ',' + str(img_path))
+    is_success, result = tweeter.tweet_by_id(twitter_id, text, img_path)
+    return CONFIG['bot']['res_tweet'] + ':' + str(is_success)  # + ', ' + str(result)
 
 
-# TODO: tweet()とtoot()がDRYしてないからリファクタリング tweet(server,img), tweet(server,text), toot(server,img), ...
-def tweet(cmd, img_path):
-    logging.info('Tweeting: ' + cmd + ',' + img_path)
-    if not img_path:
-        pass  # 画像なしTweet
-    else:
-        pass  # 画像付きTweet
-
-    return CONFIG['bot']['res_tweet']
-
-
-def toot(cmd, img_path):
-    logging.info('Tooting: ' + cmd + ',' + img_path)
-    if not img_path:
-        pass  # 画像なしTweet
-    else:
-        pass  # 画像付きTweet
-
-    return CONFIG['bot']['res_toot']
+def toot(mastodon_id, text, img_path):
+    # イメージ1個のみを想定
+    logging.info('Tooting: ' + cmd + ',' + str(img_path))
+    is_success, result = tooter.toot_by_id(mastodon_id, text, img_path)
+    return CONFIG['bot']['res_toot'] + ':' + str(is_success)  # + ', ' + str(result)
 
 
 def download_img(url):
     # TODO: デフォルトのブラウザでSlackにログインしている状態でのみ確認しています...
 
-    # jpeg -> jpg
+    # jpeg -> jpg Mastodon対応してないと思ってたけどそんなことなかった...これいらないのでは？
     exe = url.split('/')[-1].split('.')[-1]
     if exe == 'jpeg':
         exe = 'jpg'
@@ -85,6 +91,8 @@ def handle_command_with_img(cmd, channel, img_url):
 
     response = CONFIG['bot']['res_img_default']
 
+    if cmd.startswith(CONFIG['bot']['cmd_sns']):
+        response = handle_cmd_sns(cmd[len(CONFIG['bot']['cmd_sns'])+1:], img_url)  # cmdの"しゃべる "以降のみ
     return sc.api_call('chat.postMessage', channel=channel, text=response, as_user=True)
 
 
@@ -101,8 +109,8 @@ def handle_command(cmd, channel):
         response = CONFIG['bot']['res_help']
     elif cmd.startswith('kill'):
         response = handle_cmd_kill(cmd)
-    elif cmd.startswith(CONFIG['bot']['cmd_sns']):
-        response = handle_cmd_sns(cmd, None)  # 画像無しSNS投稿
+    elif cmd.startswith(CONFIG['bot']['cmd_sns']):  # cmdの"しゃべる "以降のみ
+        response = handle_cmd_sns(cmd[len(CONFIG['bot']['cmd_sns'])+1:], None)  # 画像無しSNS投稿
 
     return sc.api_call('chat.postMessage', channel=channel, text=response, as_user=True)
 
