@@ -10,7 +10,7 @@ res_kill_you = '思い上がるなよ、小童 (╬ ◠‿◠ )▄︻┻┳═�
 res_kill = 'いってくる ┗(☋｀ )┓'
 res_tweet = 'tweetしました！'
 res_toot = 'tootしました！'
-cmd_sns = 'しゃべる'  # 定義済の全SNSに投稿
+cmd_sns = 'ttt'  # "tweet toot tsubuyaku!" 定義済の全SNSに投稿
 
 [twitter]
 url_media = 'https://upload.twitter.com/1.1/media/upload.json'
