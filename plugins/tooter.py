@@ -2,16 +2,24 @@ import os.path
 import toml
 from mastodon import Mastodon
 
-SECRET = toml.load(open('secret.toml', encoding='utf-8'))
 CONFIG = toml.load(open('config.toml', encoding='utf-8'))
+
+
+def toot_by_id(mastodon_id, toot_text, toot_media_list) -> (bool, dict):
+    return toot(toot_text,
+                toot_media_list,
+                mastodon_id['server'],
+                mastodon_id['client_key'],
+                mastodon_id['client_secret'],
+                mastodon_id['access_token'])
 
 
 def toot(toot_text,
          toot_media_list,
-         server_url=SECRET['mastodon']['server_1']['url'],
-         client_key=SECRET['mastodon']['server_1']['app_1']['client_key'],
-         client_secret=SECRET['mastodon']['server_1']['app_1']['client_secret'],
-         access_token=SECRET['mastodon']['server_1']['app_1']['id_1']['access_token']) -> (bool, dict):
+         server_url,
+         client_key,
+         client_secret,
+         access_token) -> (bool, dict):
     """
     tootを行うメソッド
     :param str toot_text: tootする内容
@@ -53,5 +61,11 @@ def toot(toot_text,
 
 
 if __name__ == '__main__':
-    print(toot('toot from python', None))
+    SECRET = toml.load(open('../secret.toml', encoding='utf-8'))
+    mastodon1 = {"server": SECRET['mastodon']['server_1']['url'],
+                 "client_key": SECRET['mastodon']['server_1']['app_1']['client_key'],
+                 "client_secret": SECRET['mastodon']['server_1']['app_1']['client_secret'],
+                 "access_token": SECRET['mastodon']['server_1']['app_1']['id_1']['access_token']}
+    print(toot_by_id(mastodon1, 'a', None))  # TODO: ここで実行するとrootのパスが変わるからconfig.toml, cliend_id.txtが読めない、クラスにすればよさげ？
+
 
