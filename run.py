@@ -4,8 +4,8 @@ import time
 from slackclient import SlackClient
 import logging
 import toml
-import plugins.tooter as tooter
-import plugins.tweeter as tweeter
+from plugins.tooter import Tooter
+from plugins.tweeter import Tweeter
 
 
 class Twitoot(object):
@@ -67,13 +67,13 @@ class Twitoot(object):
     def _tweet(self, twitter_id, text, img_path):
         # イメージ1個のみを想定
         logging.info('Tweeting: ' + text + ',' + str(img_path))
-        is_success, result = tweeter.tweet_by_id(twitter_id, text, img_path)
+        is_success, result = Tweeter.tweet_by_id(twitter_id, text, img_path)
         return self.CONFIG['bot']['res_tweet'] + ':' + str(is_success)  # + ', ' + str(result)
 
     def _toot(self, mastodon_id, text, img_path):
         # イメージ1個のみを想定
         logging.info('Tooting: ' + text + ',' + str(img_path))
-        is_success, result = tooter.toot_by_id(mastodon_id, text, img_path)
+        is_success, result = Tooter.toot_by_id(mastodon_id, text, img_path)
         return self.CONFIG['bot']['res_toot'] + ':' + str(is_success)  # + ', ' + str(result)
 
     def _download_img(self, url):
