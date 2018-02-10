@@ -13,8 +13,12 @@ res_toot = 'tootしました！'
 cmd_sns = 'ttt'  # "tweet toot tsubuyaku!" 定義済の全SNSに投稿
 
 [twitter]
-url_media = 'https://upload.twitter.com/1.1/media/upload.json'
-url_text = 'https://api.twitter.com/1.1/statuses/update.json'
+url_post_media = 'https://upload.twitter.com/1.1/media/upload.json'
+url_post_text = 'https://api.twitter.com/1.1/statuses/update.json'
+url_oauth_request_token = 'https://twitter.com/oauth/request_token'
+url_oauth_access_token = 'https://twitter.com/oauth/access_token'
+url_oauth_authenticate = 'https://twitter.com/oauth/authorize'
+url_oauth_callback = 'https://github.com/ebiiim'
 
 [test]
 img_url = 'https://www.google.co.jp/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png'

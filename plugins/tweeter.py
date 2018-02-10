@@ -28,7 +28,7 @@ def tweet(tweet_text,
     else:
         try:
             params = {"status": tweet_text}
-            return True, twitter.post(CONFIG['twitter']['url_text'], params=params)
+            return True, twitter.post(CONFIG['twitter']['url_post_text'], params=params)
         except Exception as e:
             return False, e
 
