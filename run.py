@@ -38,8 +38,14 @@ def handle_cmd_sns(cmd, img_path):
                 "access_token": SECRET['twitter']['app_1']['id_1']['access_token'],
                 "access_token_secret": SECRET['twitter']['app_1']['id_1']['access_token_secret']}
 
+    twitter2 = {"consumer_key": SECRET['twitter']['app_1']['consumer_key'],
+                "consumer_secret": SECRET['twitter']['app_1']['consumer_secret'],
+                "access_token": SECRET['twitter']['app_1']['id_2']['access_token'],
+                "access_token_secret": SECRET['twitter']['app_1']['id_2']['access_token_secret']}
+
     logging.info('Handling cmd SNS: ' + cmd + ',' + str(img_path))
-    return tweet(twitter1, cmd, img_path) + '\n' + toot(mastodon1, cmd, img_path)
+    return tweet(twitter1, cmd, img_path) + '\n' + tweet(twitter2, cmd, img_path) + '\n' + toot(mastodon1, cmd, img_path)
+
 
 def tweet(twitter_id, text, img_path):
     # イメージ1個のみを想定
