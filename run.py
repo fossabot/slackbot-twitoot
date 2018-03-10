@@ -56,13 +56,8 @@ class Twitoot(object):
                     "access_token": self.SECRET['twitter']['app_1']['id_1']['access_token'],
                     "access_token_secret": self.SECRET['twitter']['app_1']['id_1']['access_token_secret']}
 
-        twitter2 = {"consumer_key": self.SECRET['twitter']['app_1']['consumer_key'],
-                    "consumer_secret": self.SECRET['twitter']['app_1']['consumer_secret'],
-                    "access_token": self.SECRET['twitter']['app_1']['id_2']['access_token'],
-                    "access_token_secret": self.SECRET['twitter']['app_1']['id_2']['access_token_secret']}
-
         logging.info('Handling cmd SNS: ' + cmd + ',' + str(img_path))
-        return self._tweet(twitter1, cmd, img_path) + '\n' + self._tweet(twitter2, cmd, img_path) + '\n' + self._toot(mastodon1, cmd, img_path)
+        return self._tweet(twitter1, cmd, img_path) + '\n' + self._toot(mastodon1, cmd, img_path)
 
     def _tweet(self, twitter_id, text, img_path):
         # イメージ1個のみを想定
