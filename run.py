@@ -42,8 +42,8 @@ class Twitoot(object):
                         if cmd and channel and not file_info:  # 画像なしメンション
                             logging.info('Handled: mention txt  -> ' + str(self._handle_command(cmd, channel)))
                         elif cmd and channel and file_info:  # 画像付きメンション
-                            logging.info(
-                                'Handled: mention img txt  -> ' + str(self._handle_command_with_img(cmd, channel, file_info)))
+                            logging.info('Handled: mention img txt  -> '
+                                         + str(self._handle_command_with_img(cmd, channel, file_info)))
                         time.sleep(self.CONFIG['system']['rtm_interval'])
                 else:
                     logging.warning('Connection failed.')
@@ -80,19 +80,16 @@ class Twitoot(object):
         is_success, result = Tooter.toot_by_id(mastodon_id, text, img_path)
         return self.CONFIG['bot']['res_toot'] + ':' + str(is_success)  # + ', ' + str(result)
 
-    def _download_img(self, url):
-        # TODO: デフォルトのブラウザでSlackにログインしている状態でのみ確認しています...
+    def _download_img(self, img_info):
+        # TODO: imgのダウンロードを実装する
 
-        # jpeg -> jpg Mastodon対応してないと思ってたけどそんなことなかった...これいらないのでは？
-        exe = url.split('/')[-1].split('.')[-1]
-        if exe == 'jpeg':
-            exe = 'jpg'
-        filename = ''.join(url.split('/')[-1].split('.')[:-1]) + '.' + exe
-
-        save_path = self.CONFIG['system']['path_tmp'] + filename
-        res = requests.get(url, stream=True)
-        with open(save_path, "wb") as fp:
-            shutil.copyfileobj(res.raw, fp)
+        img_id = img_info[0]
+        img_name = img_info[1]
+        # self.sc.api_call('')
+        save_path = self.CONFIG['system']['path_tmp'] + img_name
+        # res = requests.get(url, stream=True)
+        # with open(save_path, "wb") as fp:
+        #     shutil.copyfileobj(res.raw, fp)
         return save_path
 
     def _handle_cmd_kill(self, cmd):
@@ -107,15 +104,15 @@ class Twitoot(object):
                 return self.CONFIG['bot']['res_kill_you']
         return self.CONFIG['bot']['res_kill']
 
-    def _handle_command_with_img(self, cmd, channel, img_url):
-        logging.info('Handling img cmd: ' + img_url + ',' + cmd)
-        img_path = self._download_img(img_url)
-        logging.info('File saved: ' + img_url + '->' + img_path)
+    def _handle_command_with_img(self, cmd, channel, img_info):
+        logging.info('Handling img cmd: ' + str(img_info) + ',' + cmd)
+        img_path = self._download_img(img_info)
+        logging.info('File saved: ' + str(img_info) + '->' + img_path)
 
         response = self.CONFIG['bot']['res_img_default']
 
         if cmd.startswith(self.CONFIG['bot']['cmd_sns']):
-            response = self._handle_cmd_sns(cmd[len(self.CONFIG['bot']['cmd_sns']) + 1:], img_url)  # cmdの"しゃべる "以降のみ
+            response = self._handle_cmd_sns(cmd[len(self.CONFIG['bot']['cmd_sns']) + 1:], img_info)  # cmdの"しゃべる "以降のみ
         return self.sc.api_call('chat.postMessage', channel=channel, text=response, as_user=True)
 
     def _handle_command(self, cmd, channel) -> dict:
@@ -136,21 +133,23 @@ class Twitoot(object):
 
         return self.sc.api_call('chat.postMessage', channel=channel, text=response, as_user=True)
 
-    def _parse_slack_cmd(self, cmd) -> (str, str, str):
+    def _parse_slack_cmd(self, cmd) -> (str, str, list):
         """
         RTM(Real Time Messaging) APIで受け取ったメッセージをパースするメソッド, botに対するメンションのみを認識する
         :param cmd: RTMで受け取ったJSON
-        :return: (botに対するメンション, 対象チャンネル, 画像ファイルのURL)
+        :return: (botに対するメンション, 対象チャンネル, [ファイルID, ファイル名]|None)
         """
         at_bot = '<@' + self.bot_id + '>'
         for elem in cmd:
             logging.debug("Parsing: " + str(cmd))
             if ('text' in elem) and (at_bot in elem['text']):  # cmd[text]の中を見て、botに対するメンションの場合のみ
-                if len(elem['text'].split('uploaded a file: <')) > 1:  # ファイルアップロード
-                    if elem['text'].split('uploaded a file: <')[1].split('|')[0].split('.')[-1] in ['png','jpg','jpeg', 'bmp', 'gif']:  # Slackは拡張子をlowercaseで保存する
+                if len(elem['text'].split('uploaded a file: <')) > 1:  # ファイルアップロードを検知
+                    if elem['file']['name'].split('.')[-1].lower() in ['png', 'jpg', 'jpeg', 'bmp', 'gif']:  # 画像を検知
                         logging.info("Parsing: mention img txt")
-                        file_url = elem['text'].split('uploaded a file: <')[1].split('|')[0]
-                        return elem['text'].split(at_bot)[1].strip(), elem['channel'], file_url
+                        file_info = [elem['file']['id'], elem['file']['name']]  # file_info[0]: ID, file_info[1]: name
+                        logging.debug("file_info: " + str(file_info))
+                        logging.debug('say (with an img): ' + elem['text'].split(at_bot)[1].strip())
+                        return elem['text'].split(at_bot)[1].strip(), elem['channel'], file_info
                 else:
                     logging.info("Parsing: mention txt")
                     return elem['text'].split(at_bot)[1].strip(), elem['channel'], None
