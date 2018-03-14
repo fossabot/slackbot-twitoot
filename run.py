@@ -10,7 +10,7 @@ from plugins.tweeter import Tweeter
 
 class Twitoot(object):
 
-    def __init__(self, config_path='config.toml', secret_path='secret.toml'):
+    def __init__(self, config_path='config.toml', secret_path='secret.toml', log_level=logging.INFO):
         # 設定ファイル
         self.CONFIG = toml.load(open(config_path, encoding='utf-8'))
         self.SECRET = toml.load(open(secret_path, encoding='utf-8'))
@@ -19,9 +19,9 @@ class Twitoot(object):
         self.bot_id = None
 
         # ログの設定(ログはコンソールに表示する)
-        logging.getLogger().setLevel(logging.INFO)
+        logging.getLogger().setLevel(log_level)
         self.ch = logging.StreamHandler()
-        self.ch.setLevel(logging.DEBUG)
+        self.ch.setLevel(log_level)
         self.formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
         self.ch.setFormatter(self.formatter)
         logging.getLogger().addHandler(self.ch)
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     while c < 10:
         try:
             print('c:', c)
-            Twitoot().start()
+            Twitoot(log_level=logging.DEBUG).start()
             c += 1
         except Exception as e:
             # たまに`Connection is already closed.`エラーが出るのでその時にrestart
