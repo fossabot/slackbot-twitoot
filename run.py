@@ -149,4 +149,12 @@ class Twitoot(object):
 
 
 if __name__ == '__main__':
-    Twitoot().start()
+    c = 0
+    while c < 10:
+        try:
+            print('c:', c)
+            Twitoot().start()
+            c += 1
+        except Exception as e:
+            # たまに`Connection is already closed.`エラーが出るのでその時にrestart
+            print('エラーのため再起動します:', e)
