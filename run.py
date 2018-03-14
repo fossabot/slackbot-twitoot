@@ -29,19 +29,28 @@ class Twitoot(object):
         self.sc = SlackClient(self.SECRET['slack']['api_token'])
 
     def start(self):
-        if self.sc.rtm_connect():
-            logging.info('Bot connected and running!')
-            self.bot_id = self.sc.api_call("auth.test")["user_id"]  # botのuser IDを取得する
-            while True:  # コマンド待ち
-                cmd, channel, file_url = self._parse_slack_cmd(self.sc.rtm_read())
-                if cmd and channel and not file_url:  # 画像なしメンション
-                    logging.info('Handled: mention txt  -> ' + str(self._handle_command(cmd, channel)))
-                elif cmd and channel and file_url:  # 画像付きメンション
-                    logging.info(
-                        'Handled: mention img txt  -> ' + str(self._handle_command_with_img(cmd, channel, file_url)))
-                time.sleep(self.CONFIG['system']['rtm_interval'])
-        else:
-            logging.warning('Connection failed.')
+        restart_count = 0
+        while restart_count < self.CONFIG['system']['restart_max']:
+            try:
+                logging.info('restart count:' + str(restart_count))
+                restart_count += 1
+                if self.sc.rtm_connect():
+                    logging.info('Bot connected and running!')
+                    self.bot_id = self.sc.api_call("auth.test")["user_id"]  # botのuser IDを取得する
+                    while True:  # コマンド待ち
+                        cmd, channel, file_info = self._parse_slack_cmd(self.sc.rtm_read())
+                        if cmd and channel and not file_info:  # 画像なしメンション
+                            logging.info('Handled: mention txt  -> ' + str(self._handle_command(cmd, channel)))
+                        elif cmd and channel and file_info:  # 画像付きメンション
+                            logging.info(
+                                'Handled: mention img txt  -> ' + str(self._handle_command_with_img(cmd, channel, file_info)))
+                        time.sleep(self.CONFIG['system']['rtm_interval'])
+                else:
+                    logging.warning('Connection failed.')
+            except Exception as e:
+                # たまに`Connection is already closed.`エラーが出るのでその時にrestart
+                logging.info('Error detected : ' + str(e))
+        logging.info('Quit: Restart count exceeds the restart_max value.')
 
     def _handle_cmd_sns(self, cmd, img_path):
 
@@ -149,12 +158,4 @@ class Twitoot(object):
 
 
 if __name__ == '__main__':
-    c = 0
-    while c < 10:
-        try:
-            print('c:', c)
-            Twitoot(log_level=logging.DEBUG).start()
-            c += 1
-        except Exception as e:
-            # たまに`Connection is already closed.`エラーが出るのでその時にrestart
-            print('エラーのため再起動します:', e)
+    Twitoot().start()

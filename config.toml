@@ -1,6 +1,7 @@
 [system]
 rtm_interval = 1  # sec
 path_tmp = './tmp/'
+restart_max = 10  # エラー時に何回までrestartする？
 
 [bot]
 res_default = '((☛(◜◔。◔◝)☚))ここ大丈夫ですか～～～？？？ '  # 未定義のコマンドに対する返答
