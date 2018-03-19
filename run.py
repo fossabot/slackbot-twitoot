@@ -56,8 +56,8 @@ class Twitoot(object):
                     logging.warning('Connection failed.')
             except Exception as e:
                 # たまに`Connection is already closed.`エラーが出るのでその時にrestart
-                logging.info('Error detected : ' + str(e))
-        logging.info('Quit: Restart count exceeds the restart_max value.')
+                logging.error('Error detected : ' + str(e))
+        logging.critical('Quit: Restart count exceeds the restart_max value.')
 
     def _handle_cmd_sns(self, cmd, img_path):
 
