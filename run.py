@@ -1,6 +1,7 @@
 import shutil
 import requests
 import time
+import re
 from slackclient import SlackClient
 import logging
 import toml
@@ -87,15 +88,30 @@ class Twitoot(object):
         return self.CONFIG['bot']['res_toot'] + ':' + str(is_success)  # + ', ' + str(result)
 
     def _download_img(self, img_info):
-        # TODO: imgのダウンロードを実装する
+        # TODO: Windowsではscraping中に`UnicodeEncodeError: 'cp932' codec can't encode character '\u25e0' ...`エラーが出る
 
         img_id = img_info[0]
         img_name = img_info[1]
-        # self.sc.api_call('')
+
+        # public urlを発行する
+        resp_pub = self.sc.api_call('files.sharedPublicURL', token=self.SECRET['slack']['files_api_token'], file=img_id)
+        logging.info('sharedPublicURL for ' + str(img_id))
+
+        # public urlのtextからfileのurlを抽出する
+        url_pub = resp_pub['file']['permalink_public']
+        res_pub = requests.get(url_pub, stream=True)
+        url_file = re.compile(r'<img src="https://.*').findall(res_pub.text)[0][10:-2]
+
+        # 抽出したfileのurlからファイルをダウンロードする
+        res_file = requests.get(url_file, stream=True)
         save_path = self.CONFIG['system']['path_tmp'] + img_name
-        # res = requests.get(url, stream=True)
-        # with open(save_path, "wb") as fp:
-        #     shutil.copyfileobj(res.raw, fp)
+        with open(save_path, "wb") as fp:
+            shutil.copyfileobj(res_file.raw, fp)
+
+        # public urlをrevokeする
+        resp_depub = self.sc.api_call('files.revokePublicURL', token=self.SECRET['slack']['files_api_token'], file=img_id)
+        logging.info('revokePublicURL for ' + str(img_id))
+
         return save_path
 
     def _handle_cmd_kill(self, cmd):
