@@ -11,7 +11,8 @@ from plugins.tweeter import Tweeter
 
 class Twitoot(object):
 
-    def __init__(self, config_path='config.toml', secret_path='secret.toml', log_level_console=logging.INFO, log_level_file=logging.DEBUG, log_file_name='default.log'):
+    def __init__(self, config_path='config.toml', secret_path='secret.toml',
+                 log_level_console=logging.INFO, log_level_file=logging.DEBUG, log_file_name='default.log'):
         # 設定ファイル
         self.CONFIG = toml.load(open(config_path, encoding='utf-8'))
         self.SECRET = toml.load(open(secret_path, encoding='utf-8'))
@@ -44,13 +45,12 @@ class Twitoot(object):
                 if self.sc.rtm_connect():
                     logging.info('Bot connected and running!')
                     self.bot_id = self.sc.api_call("auth.test")["user_id"]  # botのuser IDを取得する
-                    while True:  # コマンド待ち
+                    while True:
+                        # コマンド待ち
                         cmd, channel, file_info = self._parse_slack_cmd(self.sc.rtm_read())
-                        if cmd and channel and not file_info:  # 画像なしメンション
-                            logging.info('Handled: mention txt  -> ' + str(self._handle_command(cmd, channel)))
-                        elif cmd and channel and file_info:  # 画像付きメンション
-                            logging.info('Handled: mention img txt  -> '
-                                         + str(self._handle_command_with_img(cmd, channel, file_info)))
+                        # コマンド実行
+                        if cmd and channel:
+                            logging.info('Handled:  -> ' + str(self._handle_command(cmd, channel, file_info)))
                         time.sleep(self.CONFIG['system']['rtm_interval'])
                 else:
                     logging.warning('Connection failed.')
@@ -102,8 +102,11 @@ class Twitoot(object):
         return self.CONFIG['bot']['res_toot'] + ': ' + str(is_success)
 
     def _download_img(self, img_info):
-        # TODO: Windowsではscraping中に`UnicodeEncodeError: 'cp932' codec can't encode character '\u25e0' ...`エラーが出る
-
+        """
+        Slackにpostしたファイルをダウンロードするメソッド
+        :param img_info: [img_id, img_name] (e.g. ['ABCDEFGHI', 'abc.jpg'])
+        :return: 保存先のパス (e.g. ./tmp/abc.jpg)
+        """
         img_id = img_info[0]
         img_name = img_info[1]
 
@@ -141,31 +144,27 @@ class Twitoot(object):
                 return self.CONFIG['bot']['res_kill_you']
         return self.CONFIG['bot']['res_kill']
 
-    def _handle_command_with_img(self, cmd, channel, img_info):
-        logging.info('Handling img cmd: ' + str(img_info) + ',' + cmd)
-        img_path = self._download_img(img_info)
-        img_list = [img_path]  # TODO: 今のところimg1枚のみ対応
-
-        response = self.CONFIG['bot']['res_img_default']
-        if cmd.startswith(self.CONFIG['bot']['cmd_sns']):
-            response = self._handle_cmd_sns(cmd[len(self.CONFIG['bot']['cmd_sns']) + 1:], img_list)  # 画像ありSNS投稿
-        return self.sc.api_call('chat.postMessage', channel=channel, text=response, as_user=True)
-
-    def _handle_command(self, cmd, channel) -> dict:
+    def _handle_command(self, cmd, channel, img_info) -> dict:
         """
-        botに対するメンションを処理するメソッド, file_url=Noneの場合のコマンドの識別および処理の実施を行う
+        botに対するメンションを処理するメソッド, コマンドの識別および実行を行う
         :param cmd: コマンド(botに対するメンション)
         :param channel: Slackの対象チャンネル
         :return: サーバの応答(Slackの対象チャンネルにコマンドの実行結果を投稿した結果)
         """
-        response = self.CONFIG['bot']['res_default']
+        img_list = None
+        if img_info:
+            response = self.CONFIG['bot']['res_img_default']
+            img_path = self._download_img(img_info)
+            img_list = [img_path]  # TODO: 今のところimg1枚のみ対応
+        else:
+            response = self.CONFIG['bot']['res_default']
         logging.info('Handling cmd: ' + cmd)
         if cmd.startswith(('help', '-h', '--help', '使い方', 'a')):
             response = self.CONFIG['bot']['res_help']
         elif cmd.startswith('kill'):
             response = self._handle_cmd_kill(cmd)
         elif cmd.startswith(self.CONFIG['bot']['cmd_sns']):
-            response = self._handle_cmd_sns(cmd[len(self.CONFIG['bot']['cmd_sns']) + 1:], None)  # 画像無しSNS投稿
+            response = self._handle_cmd_sns(cmd[len(self.CONFIG['bot']['cmd_sns']) + 1:], img_list)
 
         return self.sc.api_call('chat.postMessage', channel=channel, text=response, as_user=True)
 
