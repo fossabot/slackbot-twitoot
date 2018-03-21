@@ -22,13 +22,13 @@ class Tooter(object):
              access_token) -> (bool, dict):
         """
         tootを行うメソッド
-        :param str toot_text: tootする内容
-        :param list media_list: tootに添付するメディアのパスのリスト
+        :param str toot_text: 本文
+        :param list media_list: 添付するメディアのパスのリスト
         :param str server_url: サーバURL e.g. https://mstdn.example.com
         :param str client_key: client_key
         :param str client_secret: client_secret
         :param str access_token: access_token
-        :return: (bool, dict)で成否とresponse or errorを返す
+        :return: (isSuccess, response)
         """
 
         if not media_list:
