@@ -75,17 +75,29 @@ class Twitoot(object):
         logging.info('Handling cmd SNS: ' + cmd + ',' + str(img_path))
         return self._tweet(twitter1, cmd, img_path) + '\n' + self._toot(mastodon1, cmd, img_path)
 
-    def _tweet(self, twitter_id, text, img_path):
-        # イメージ1個のみを想定
-        logging.info('Tweeting: ' + text + ',' + str(img_path))
-        is_success, result = Tweeter.tweet_by_id(twitter_id, text, img_path)
-        return self.CONFIG['bot']['res_tweet'] + ':' + str(is_success)  # + ', ' + str(result)
+    def _tweet(self, twitter_id, text, img_list):
+        """
+        plugins.tweeterを呼び出すメソッド
+        :param twitter_id: twitter token情報を格納したdict
+        :param text: tweetするtext
+        :param img_list: メディアへのpath(e.g. `tmp/abc.png`)のlist or None
+        :return: ログ(string)
+        """
+        logging.info('Tweeting: ' + text + ',' + str(img_list))
+        is_success, result = Tweeter.tweet_by_id(twitter_id, text, img_list)
+        return self.CONFIG['bot']['res_tweet'] + ':' + str(is_success)
 
-    def _toot(self, mastodon_id, text, img_path):
-        # イメージ1個のみを想定
-        logging.info('Tooting: ' + text + ',' + str(img_path))
-        is_success, result = Tooter.toot_by_id(mastodon_id, text, img_path)
-        return self.CONFIG['bot']['res_toot'] + ':' + str(is_success)  # + ', ' + str(result)
+    def _toot(self, mastodon_id, text, img_list):
+        """
+        plugins.tooterを呼び出すメソッド
+        :param mastodon_id: mastodon token情報を格納したdict
+        :param text: tootするtext
+        :param img_list: メディアへのpath(e.g. `tmp/abc.png`)のlist or None
+        :return: ログ(string)
+        """
+        logging.info('Tooting: ' + text + ',' + str(img_list))
+        is_success, result = Tooter.toot_by_id(mastodon_id, text, img_list)
+        return self.CONFIG['bot']['res_toot'] + ':' + str(is_success)
 
     def _download_img(self, img_info):
         # TODO: Windowsではscraping中に`UnicodeEncodeError: 'cp932' codec can't encode character '\u25e0' ...`エラーが出る
@@ -134,7 +146,7 @@ class Twitoot(object):
         response = self.CONFIG['bot']['res_img_default']
 
         if cmd.startswith(self.CONFIG['bot']['cmd_sns']):
-            response = self._handle_cmd_sns(cmd[len(self.CONFIG['bot']['cmd_sns']) + 1:], img_info)  # cmdの"しゃべる "以降のみ
+            response = self._handle_cmd_sns(cmd[len(self.CONFIG['bot']['cmd_sns']) + 1:], img_path)  # cmdの"しゃべる "以降のみ
         return self.sc.api_call('chat.postMessage', channel=channel, text=response, as_user=True)
 
     def _handle_command(self, cmd, channel) -> dict:
