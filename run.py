@@ -39,7 +39,7 @@ class Twitoot(object):
         restart_count = 0
         while restart_count < self.CONFIG['system']['restart_max']:
             try:
-                logging.info('restart count:' + str(restart_count))
+                logging.info('restart count: ' + str(restart_count))
                 restart_count += 1
                 if self.sc.rtm_connect():
                     logging.info('Bot connected and running!')
@@ -59,7 +59,7 @@ class Twitoot(object):
                 logging.error('Error detected : ' + str(e))
         logging.critical('Quit: Restart count exceeds the restart_max value.')
 
-    def _handle_cmd_sns(self, cmd, img_path):
+    def _handle_cmd_sns(self, cmd, img_list):
 
         # TODO: 構造が汚い！
         mastodon1 = {"server": self.SECRET['mastodon']['server_1']['url'],
@@ -72,8 +72,8 @@ class Twitoot(object):
                     "access_token": self.SECRET['twitter']['app_1']['id_1']['access_token'],
                     "access_token_secret": self.SECRET['twitter']['app_1']['id_1']['access_token_secret']}
 
-        logging.info('Handling cmd SNS: ' + cmd + ',' + str(img_path))
-        return self._tweet(twitter1, cmd, img_path) + '\n' + self._toot(mastodon1, cmd, img_path)
+        logging.info('Handling cmd SNS: ' + cmd + ',' + str(img_list))
+        return self._tweet(twitter1, cmd, img_list) + '\n' + self._toot(mastodon1, cmd, img_list)
 
     def _tweet(self, twitter_id, text, img_list):
         """
@@ -83,9 +83,10 @@ class Twitoot(object):
         :param img_list: メディアへのpath(e.g. `tmp/abc.png`)のlist or None
         :return: ログ(string)
         """
-        logging.info('Tweeting: ' + text + ',' + str(img_list))
+        logging.info('Tweeting: ' + text + ', ' + str(img_list))
         is_success, result = Tweeter.tweet_by_id(twitter_id, text, img_list)
-        return self.CONFIG['bot']['res_tweet'] + ':' + str(is_success)
+        logging.info('Tweeted: ' + str(is_success) + str(result))
+        return self.CONFIG['bot']['res_tweet'] + ': ' + str(is_success)
 
     def _toot(self, mastodon_id, text, img_list):
         """
@@ -95,9 +96,10 @@ class Twitoot(object):
         :param img_list: メディアへのpath(e.g. `tmp/abc.png`)のlist or None
         :return: ログ(string)
         """
-        logging.info('Tooting: ' + text + ',' + str(img_list))
+        logging.info('Tooting: ' + text + ', ' + str(img_list))
         is_success, result = Tooter.toot_by_id(mastodon_id, text, img_list)
-        return self.CONFIG['bot']['res_toot'] + ':' + str(is_success)
+        logging.info('Tooted: ' + str(is_success) + str(result))
+        return self.CONFIG['bot']['res_toot'] + ': ' + str(is_success)
 
     def _download_img(self, img_info):
         # TODO: Windowsではscraping中に`UnicodeEncodeError: 'cp932' codec can't encode character '\u25e0' ...`エラーが出る
@@ -119,6 +121,7 @@ class Twitoot(object):
         save_path = self.CONFIG['system']['path_tmp'] + img_name
         with open(save_path, "wb") as fp:
             shutil.copyfileobj(res_file.raw, fp)
+        logging.info('File saved: ' + str(img_info) + ' -> ' + save_path)
 
         # public urlをrevokeする
         resp_depub = self.sc.api_call('files.revokePublicURL', token=self.SECRET['slack']['files_api_token'], file=img_id)
@@ -141,12 +144,11 @@ class Twitoot(object):
     def _handle_command_with_img(self, cmd, channel, img_info):
         logging.info('Handling img cmd: ' + str(img_info) + ',' + cmd)
         img_path = self._download_img(img_info)
-        logging.info('File saved: ' + str(img_info) + '->' + img_path)
+        img_list = [img_path]  # TODO: 今のところimg1枚のみ対応
 
         response = self.CONFIG['bot']['res_img_default']
-
         if cmd.startswith(self.CONFIG['bot']['cmd_sns']):
-            response = self._handle_cmd_sns(cmd[len(self.CONFIG['bot']['cmd_sns']) + 1:], img_path)  # cmdの"しゃべる "以降のみ
+            response = self._handle_cmd_sns(cmd[len(self.CONFIG['bot']['cmd_sns']) + 1:], img_list)  # 画像ありSNS投稿
         return self.sc.api_call('chat.postMessage', channel=channel, text=response, as_user=True)
 
     def _handle_command(self, cmd, channel) -> dict:
@@ -162,7 +164,7 @@ class Twitoot(object):
             response = self.CONFIG['bot']['res_help']
         elif cmd.startswith('kill'):
             response = self._handle_cmd_kill(cmd)
-        elif cmd.startswith(self.CONFIG['bot']['cmd_sns']):  # cmdの"しゃべる "以降のみ
+        elif cmd.startswith(self.CONFIG['bot']['cmd_sns']):
             response = self._handle_cmd_sns(cmd[len(self.CONFIG['bot']['cmd_sns']) + 1:], None)  # 画像無しSNS投稿
 
         return self.sc.api_call('chat.postMessage', channel=channel, text=response, as_user=True)
