@@ -1,7 +1,9 @@
+import os
 import shutil
 import requests
 import time
 import re
+import cv2
 from slackclient import SlackClient
 import logging
 import toml
@@ -101,6 +103,34 @@ class Twitoot(object):
         logging.info('Tooted: ' + str(is_success) + str(result))
         return self.CONFIG['bot']['res_toot'] + ': ' + str(is_success)
 
+    def _resize_img_if_needed(self, path, maxsize=Tweeter.MAX_IMAGE_SIZE, output_suffix='.min'):
+        """
+        再帰:
+        1)画像ファイルのサイズがmaxsizeを超えていたらリサイズして保存する;
+        2)maxsize以下ならファイルパスを返す;
+        :param path: ファイルのパス (e.g. ./tmp/a.jpg)
+        :param maxsize: 許容する最大サイズ
+        :param output_suffix: 出力ファイルのファイル名につける接尾辞
+        :return: 出力ファイルのパス (e.g. ./tmp/a.min.jpg)
+        """
+        if os.path.getsize(path) <= maxsize:
+            logging.info('Resize img: File size is OK, ' + path)
+            return path
+        if path.split('.')[-1] not in ['jpeg', 'jpg']:
+            logging.info('Resize img: invalid file extension, ' + path)
+            return path
+
+        # TODO: bmpはpngにする; pngは縦横それぞれ * sqrt(0.5)してサイズを約半分にする;
+
+        new_path = ('.').join(path.split('.')[:-1]) + output_suffix + '.' + path.split('.')[-1]  # a.jpg -> a.min.jpg
+        img = cv2.imread(path)  # original img
+        result, enc = cv2.imencode('.jpg', img, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+        dec = cv2.imdecode(enc, 1)  # flag=1: read img as 3ch color
+        cv2.imwrite(new_path, dec)
+
+        logging.info('Resize img: ' + path + ' -> ' + new_path)
+        return self._resize_img_if_needed(new_path, maxsize)
+
     def _download_img(self, img_info):
         """
         Slackにpostしたファイルをダウンロードするメソッド
@@ -154,7 +184,7 @@ class Twitoot(object):
         img_list = None
         if img_info:
             response = self.CONFIG['bot']['res_img_default']
-            img_path = self._download_img(img_info)
+            img_path = self._resize_img_if_needed(self._download_img(img_info))
             img_list = [img_path]  # TODO: 今のところimg1枚のみ対応
         else:
             response = self.CONFIG['bot']['res_default']
