@@ -7,6 +7,8 @@ class Tweeter(object):
 
     URL_POST_MEDIA = 'https://upload.twitter.com/1.1/media/upload.json'
     URL_POST_TEXT = 'https://api.twitter.com/1.1/statuses/update.json'
+    # TwitterのImageは5MB以下 {"errors":[{"code":324,"message":"Image file size must be <= 5242880 bytes"}]}
+    MAX_IMAGE_SIZE = 5242880
 
     @staticmethod
     def tweet_by_id(twitter_id, tweet_text, media_list) -> (bool, dict):
@@ -42,6 +44,8 @@ class Tweeter(object):
             for medium in media_list:
                 check_path = medium
                 is_valid = os.path.isfile(check_path)
+                if is_valid and os.path.getsize(check_path) > Tweeter.MAX_IMAGE_SIZE:
+                    return False, 'too large: ' + check_path + ', the max size is ' + str(Tweeter.MAX_IMAGE_SIZE)
                 if not is_valid:
                     return False, 'invalid media path:' + check_path
         except Exception as e:
