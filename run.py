@@ -12,7 +12,7 @@ from plugins.tweeter import Tweeter
 class Twitoot(object):
 
     def __init__(self, config_path='config.toml', secret_path='secret.toml',
-                 log_level_console=logging.INFO, log_level_file=logging.DEBUG, log_file_name='default.log'):
+                 log_level_console=logging.INFO, log_level_file=logging.INFO, log_file_name='default.log'):
         # 設定ファイル
         self.CONFIG = toml.load(open(config_path, encoding='utf-8'))
         self.SECRET = toml.load(open(secret_path, encoding='utf-8'))
