@@ -36,7 +36,7 @@ class Twitoot(object):
         self.fh.setFormatter(self.formatter)
         logging.getLogger().addHandler(self.fh)
 
-        self.sc = SlackClient(self.SECRET['slack']['api_token'])
+        self.sc = SlackClient(self.SECRET['slack']['token_bot'])
 
     def start(self):
         restart_count = 0
@@ -141,7 +141,7 @@ class Twitoot(object):
         img_name = img_info[1]
 
         # public urlを発行する
-        resp_pub = self.sc.api_call('files.sharedPublicURL', token=self.SECRET['slack']['files_api_token'], file=img_id)
+        resp_pub = self.sc.api_call('files.sharedPublicURL', token=self.SECRET['slack']['token_files'], file=img_id)
         logging.info('sharedPublicURL for ' + str(img_id))
 
         # public urlのtextからfileのurlを抽出する
