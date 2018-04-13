@@ -14,7 +14,30 @@ Python3で動きます。つぶやきたい内容をSlackに書くと、[RTM API
 ## 導入方法
 三種の神器ならぬ三種のアクセストークンが必要です。
 
-**cloneしてrequirementsをインストール**
+### Using Docker
+
+`docker-compose.yml`を用意してから`docker-compose up`します。 [(詳細)](#secret.toml)
+
+```docker-compose.yml
+slackbot-twitoot:
+  restart: always
+  image: ebiiim/slackbot-twitoot
+  environment:
+    OAUTH_TOKEN:
+    BOT_TOKEN:
+    TWITTER_CONSUMER_KEY:
+    TWITTER_CONSUMER_SECRET:
+    TWITTER_ACCESS_TOKEN:
+    TWITTER_ACCESS_TOKEN_SECRET:
+    MASTODON_URL:
+    MASTODON_CLIENT_KEY:
+    MASTODON_CLIENT_SECRET:
+    MASTODON_ACCESS_TOKEN:
+```
+
+### Normal Installation
+
+**Clone & Install Requirements**
 ```
 git clone https://github.com/ebiiim/slackbot-twitoot && cd slackbot-twitoot
 pip3 install -r requirements.txt
@@ -38,6 +61,7 @@ python3 run.py
 - 2018-02-10 v0.1.0 とりあえずつぶやけます
 - 2018-03-25 v0.2.0 画像付きでつぶやけます
 - 2018-04-01 v0.2.1 ↑ウソでした(エイプリルフールではありません)
+- 2018-04-14 v0.3.0 Dockerイメージができました
 
 ## TODO
 - 機能
@@ -51,6 +75,8 @@ python3 run.py
 ## 細かいこと
 
 ### <a name="secret.toml"> secret.toml
+> Dockerを使う場合は`docker-compose.yml`の`environment:`の各項目に同じように入力します。(''は不要)
+
 ```
 [slack]
 oauth_token = ''
