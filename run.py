@@ -7,6 +7,7 @@ import cv2
 from slackclient import SlackClient
 import logging
 import toml
+from plugins.textformatter import TextFormatter
 from plugins.tooter import Tooter
 from plugins.tweeter import Tweeter
 
@@ -74,6 +75,7 @@ class Twitoot(object):
                     "access_token": self.SECRET['twitter']['app_1']['id_1']['access_token'],
                     "access_token_secret": self.SECRET['twitter']['app_1']['id_1']['access_token_secret']}
 
+        cmd = TextFormatter.format(cmd)
         logging.info('Handling cmd SNS: ' + cmd + ',' + str(img_list))
         return self._tweet(twitter1, cmd, img_list) + '\n' + self._toot(mastodon1, cmd, img_list)
 
