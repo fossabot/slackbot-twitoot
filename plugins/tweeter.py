@@ -82,8 +82,8 @@ if __name__ == '__main__':
     SECRET = toml.load(open('../secret.toml', encoding='utf-8'))
     id1 = {"consumer_key": SECRET['twitter']['app_1']['consumer_key'],
            "consumer_secret": SECRET['twitter']['app_1']['consumer_secret'],
-           "access_token": SECRET['twitter']['app_1']['id_2']['access_token'],
-           "access_token_secret": SECRET['twitter']['app_1']['id_2']['access_token_secret']}
+           "access_token": SECRET['twitter']['app_1']['id_1']['access_token'],
+           "access_token_secret": SECRET['twitter']['app_1']['id_1']['access_token_secret']}
     print(Tweeter.tweet_by_id(id1, 'test1', None))
     print(Tweeter.tweet_by_id(id1, 'test2', ['../test/test1.png']))
     print(Tweeter.tweet_by_id(id1, 'test3', ['../test/test1.png', '../test/test2.png']))
