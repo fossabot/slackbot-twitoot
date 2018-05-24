@@ -75,12 +75,14 @@ class Twitoot(object):
                     "access_token": self.SECRET['twitter']['app_1']['id_1']['access_token'],
                     "access_token_secret": self.SECRET['twitter']['app_1']['id_1']['access_token_secret']}
 
+        # SNSに投稿する内容をTextFormatterに通す
+        # checkしてダメなら投稿せずにreturn
         format_checker, error_msg = TextFormatter.check(cmd)
         if not format_checker:
             msg = 'SNS msg checker detected an invalid char: ' + error_msg
             logging.warning(msg)
             return msg
-
+        # checkを通ったらformatして投稿
         cmd = TextFormatter.format(cmd)
         logging.info('Handling cmd SNS: ' + cmd + ',' + str(img_list))
         return self._tweet(twitter1, cmd, img_list) + '\n' + self._toot(mastodon1, cmd, img_list)
