@@ -1,5 +1,7 @@
 import os
 from mastodon import Mastodon
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 class Tooter(object):
@@ -40,8 +42,10 @@ class Tooter(object):
                 check_path = medium
                 is_valid = os.path.isfile(check_path)
                 if not is_valid:
+                    logger.error('upload failed')
                     return False, 'invalid media path:' + check_path
         except Exception as e:
+            logger.error(str(e))
             return False, e
 
         # Mastodon()で必要なclient_idの一時ファイルを生成する
@@ -57,8 +61,11 @@ class Tooter(object):
             mastodon = Mastodon(client_id=client_info_path, access_token=access_token, api_base_url=server_url)
             # mediaをアップロードした結果をtootに添付すれば画像付きtootができる
             media_ids = [mastodon.media_post(media) for media in media_list]
-            return True, mastodon.status_post(status=toot_text, media_ids=media_ids)
+            result = mastodon.status_post(status=toot_text, media_ids=media_ids)
+            logger.info(result)
+            return True, result
         except Exception as e:
+            logger.error(str(e))
             return False, e
         finally:
             # delete tmp_client_id.txt

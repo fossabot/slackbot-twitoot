@@ -1,6 +1,8 @@
 import os
 import json
 from requests_oauthlib import OAuth1Session
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 class Tweeter(object):
@@ -45,10 +47,15 @@ class Tweeter(object):
                 check_path = medium
                 is_valid = os.path.isfile(check_path)
                 if is_valid and os.path.getsize(check_path) > Tweeter.MAX_IMAGE_SIZE:
-                    return False, 'too large: ' + check_path + ', the max size is ' + str(Tweeter.MAX_IMAGE_SIZE)
+                    msg = 'too large: ' + check_path + ', the max size is ' + str(Tweeter.MAX_IMAGE_SIZE)
+                    logger.error(msg)
+                    return False, msg
                 if not is_valid:
-                    return False, 'invalid media path:' + check_path
+                    msg = 'invalid media path:' + check_path
+                    logger.error(msg)
+                    return False, msg
         except Exception as e:
+            logger.error(str(e))
             return False, e
 
         try:
@@ -61,6 +68,7 @@ class Tweeter(object):
                 files = {"media": open(medium, 'rb')}
                 req_upload = twitter_client.post(Tweeter.URL_POST_MEDIA, files=files)
                 if req_upload.status_code != 200:
+                    logger.error('upload failed')
                     return False, 'failed to upload:' + medium
                 media_ids.append(json.loads(req_upload.text)['media_id'])
 
@@ -72,8 +80,11 @@ class Tweeter(object):
 
             # post
             params = {"status": tweet_text, "media_ids": media_ids_str}
-            return True, twitter_client.post(Tweeter.URL_POST_TEXT, params=params)
+            result = twitter_client.post(Tweeter.URL_POST_TEXT, params=params)
+            logger.info(result)
+            return True, result
         except Exception as e:
+            logger.error(str(e))
             return False, e
 
 

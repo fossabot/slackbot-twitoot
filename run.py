@@ -14,28 +14,13 @@ from plugins.tweeter import Tweeter
 
 class Twitoot(object):
 
-    def __init__(self, config_path='config.toml', secret_path='secret.toml',
-                 log_level_console=logging.INFO, log_level_file=logging.INFO, log_file_name='default.log'):
+    def __init__(self, config_path='config.toml', secret_path='secret.toml'):
         # 設定ファイル
         self.CONFIG = toml.load(open(config_path, encoding='utf-8'))
         self.SECRET = toml.load(open(secret_path, encoding='utf-8'))
 
         # 認証後に代入する
         self.bot_id = None
-
-        # ログの設定(ログはコンソールに表示する)
-        logging.getLogger().setLevel(logging.DEBUG)
-        self.formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-
-        self.ch = logging.StreamHandler()
-        self.ch.setLevel(log_level_console)
-        self.ch.setFormatter(self.formatter)
-        logging.getLogger().addHandler(self.ch)
-
-        self.fh = logging.FileHandler(log_file_name, mode='a', encoding=None, delay=False)
-        self.fh.setLevel(log_level_file)
-        self.fh.setFormatter(self.formatter)
-        logging.getLogger().addHandler(self.fh)
 
         self.sc = SlackClient(self.SECRET['slack']['bot_token'])
 
@@ -232,4 +217,23 @@ class Twitoot(object):
 
 
 if __name__ == '__main__':
+
+    log_level_console = logging.INFO
+    log_level_file = logging.INFO
+    log_file_name = 'default.log'
+
+    # ログの設定(ログはコンソールに表示する)
+    logging.getLogger().setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+    ch = logging.StreamHandler()
+    ch.setLevel(log_level_console)
+    ch.setFormatter(formatter)
+    logging.getLogger().addHandler(ch)
+
+    fh = logging.FileHandler(log_file_name, mode='a', encoding=None, delay=False)
+    fh.setLevel(log_level_file)
+    fh.setFormatter(formatter)
+    logging.getLogger().addHandler(fh)
+
     Twitoot().start()

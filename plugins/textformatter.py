@@ -1,5 +1,7 @@
 import re
 import emoji
+from logging import getLogger
+logger = getLogger(__name__)
 
 
 class TextFormatter(object):
@@ -34,11 +36,15 @@ class TextFormatter(object):
     @staticmethod
     def _url_rm_brackets(text) -> str:
         # URLの外側に<>がある場合は削除する
-        return re.sub(r'<(https?://[\w/:%#\$&\?\(\)~\.=\+\-]+)>', r'\1', text)
+        s = re.sub(r'<(https?://[\w/:%#\$&\?\(\)~\.=\+\-]+)>', r'\1', text)
+        logger.debug('remove brackets:' + text +' -> ' + s)
+        return s
 
     @staticmethod
     def _str2emoji(text) -> str:
-        return emoji.emojize(text, use_aliases=True)
+        s = emoji.emojize(text, use_aliases=True)
+        logger.debug('emojize:' + text + ' -> ' + s)
+        return s
 
     @staticmethod
     def _is_safe_emoji(text) -> (bool, str):
@@ -51,14 +57,16 @@ class TextFormatter(object):
         match_obj = re.search(pattern, f)
 
         if match_obj:
+            logger.error('incomplete emojize')
             return False, match_obj.group()
+        logger.debug('emojized')
         return True, ''
 
 
 if __name__ == '__main__':
-    s = 'abc:innocent:de:grinning: <https://ebiiim.com/> fghij<<>>'
-    print(TextFormatter.format(s))
-    print(TextFormatter.check(s))
-    s = ':innocent::sleeping::zzz::blush::package::upside_down_face:'
-    print(TextFormatter.format(s))
-    print(TextFormatter.check(s))
+    s_t= 'abc:innocent:de:grinning: <https://ebiiim.com/> fghij<<>>'
+    print(TextFormatter.format(s_t))
+    print(TextFormatter.check(s_t))
+    s_f = ':innocent::sleeping::zzz::blush::package::upside_down_face:'
+    print(TextFormatter.format(s_f))
+    print(TextFormatter.check(s_f))
