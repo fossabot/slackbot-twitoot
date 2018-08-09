@@ -152,6 +152,7 @@ class Twitoot(object):
 
         # public urlを発行する
         resp_pub = self.sc.api_call('files.sharedPublicURL', token=self.SECRET['slack']['oauth_token'], file=img_id)
+        logging.debug(resp_pub)
         logging.info('sharedPublicURL for ' + str(img_id))
 
         # public urlのtextからfileのurlを抽出する
@@ -218,10 +219,10 @@ class Twitoot(object):
         for elem in cmd:
             logging.debug("Parsing: " + str(cmd))
             if ('text' in elem) and (at_bot in elem['text']):  # cmd[text]の中を見て、botに対するメンションの場合のみ
-                if len(elem['text'].split('uploaded a file: <')) > 1:  # ファイルアップロードを検知
-                    if elem['file']['name'].split('.')[-1].lower() in ['png', 'jpg', 'jpeg', 'bmp', 'gif']:  # 画像を検知
+                if 'files' in elem:  # ファイルアップロードを検知
+                    if elem['files'][0]['name'].split('.')[-1].lower() in ['png', 'jpg', 'jpeg', 'bmp', 'gif']:  # 画像を検知
                         logging.info("Parsing: mention img txt")
-                        file_info = [elem['file']['id'], elem['file']['name']]  # file_info[0]: ID, file_info[1]: name
+                        file_info = [elem['files'][0]['id'], elem['files'][0]['name']]  # file_info[0]: ID, file_info[1]: name
                         logging.debug("file_info: " + str(file_info))
                         logging.debug('say (with an img): ' + elem['text'].split(at_bot)[1].strip())
                         return elem['text'].split(at_bot)[1].strip(), elem['channel'], file_info
