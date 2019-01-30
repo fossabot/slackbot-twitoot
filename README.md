@@ -1,4 +1,6 @@
 # slackbot-twitoot
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Febiiim%2Fslackbot-twitoot.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Febiiim%2Fslackbot-twitoot?ref=badge_shield)
+
 SlackからTwitterとMastodonに同時投稿するためのbotです。
 
 **使い方**
@@ -112,3 +114,7 @@ Twitterに投稿するために利用します。
 Mastodonに投稿するために利用します。
 - `url`には利用するサーバのURLを入力してください。(e.g. `https://mstdn.jp`)
 - ブラウザからMastodonにログインし、設定画面の`開発`から`新規アプリ`を作成すると残りが埋まります。
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Febiiim%2Fslackbot-twitoot.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Febiiim%2Fslackbot-twitoot?ref=badge_large)
